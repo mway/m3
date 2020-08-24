@@ -114,7 +114,7 @@ func readNamespaceSegments(
 	log *zap.Logger,
 ) {
 	infoFiles := fs.ReadIndexInfoFiles(fsOpts.FilePathPrefix(), nsID,
-		fsOpts.InfoReaderBufferSize())
+		fsOpts.InfoReaderBufferSize(), persist.FileSetFlushType)
 
 	for _, infoFile := range infoFiles {
 		if err := infoFile.Err.Error(); err != nil {
