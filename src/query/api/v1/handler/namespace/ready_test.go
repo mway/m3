@@ -227,6 +227,10 @@ func (t *testClusters) ClusterNamespaces() m3.ClusterNamespaces {
 	return t.namespaces
 }
 
+func (t *testClusters) NonReadyClusterNamespaces() m3.ClusterNamespaces {
+	panic("implement me")
+}
+
 func (t *testClusters) Close() error {
 	panic("implement me")
 }
