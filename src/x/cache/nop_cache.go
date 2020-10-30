@@ -1,4 +1,4 @@
-// Copyright (c) 2016 Uber Technologies, Inc.
+// Copyright (c) 2020 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,32 +18,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package tdigest
+package cache
 
 import (
-	"github.com/m3db/m3/src/x/pool"
+	"context"
+	"time"
 )
 
-type centroidsPool struct {
-	pool pool.BucketizedObjectPool
+// NewNoop returns a new no-op cache.
+func NewNoop() Cache {
+	return &noopCache{}
 }
 
-// NewCentroidsPool creates a new centroids pool.
-func NewCentroidsPool(sizes []pool.Bucket, opts pool.ObjectPoolOptions) CentroidsPool {
-	return &centroidsPool{pool: pool.NewBucketizedObjectPool(sizes, opts)}
+type noopCache struct{}
+
+func (n *noopCache) Put(_ string, _ interface{})                           {}
+func (n *noopCache) PutWithTTL(_ string, _ interface{}, ttl time.Duration) {}
+
+func (n *noopCache) Get(ctx context.Context, key string, loader LoaderFunc) (interface{}, error) {
+	return loader(ctx, key)
 }
 
-func (p *centroidsPool) Init() {
-	p.pool.Init(func(capacity int) interface{} {
-		return make([]Centroid, 0, capacity)
-	})
+func (n *noopCache) GetWithTTL(ctx context.Context, key string, loader LoaderWithTTLFunc) (interface{}, error) {
+	val, _, err := loader(ctx, key)
+	return val, err
 }
 
-func (p *centroidsPool) Get(capacity int) []Centroid {
-	return p.pool.Get(capacity).([]Centroid)
-}
-
-func (p *centroidsPool) Put(value []Centroid) {
-	value = value[:0]
-	p.pool.Put(value, cap(value))
-}
+var _ Cache = &noopCache{}
